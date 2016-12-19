@@ -105,7 +105,6 @@ class Node:
 try:
 	img = loadImage(str(sys.argv[1]))
 	imgDim = Vector(get_image_size(str(sys.argv[1]))[0], get_image_size(str(sys.argv[1]))[1])
-	#imgDim = Vector(int(sys.argv[2]), int(sys.argv[3]))
 except:
 	close()
 	exit("Well fuck")
