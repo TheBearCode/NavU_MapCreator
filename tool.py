@@ -1,7 +1,39 @@
 from graphics import *
 import sys
 from xml.etree.ElementTree import *
+import struct
+import imghdr
 
+#Get dimensions of a PNG
+def get_image_size(fname):
+	with open(fname, 'rb') as fhandle:
+		head = fhandle.read(24)
+		if len(head) != 24:
+			return
+		check = struct.unpack('>i', head[4:8])[0]
+		if check != 0x0d0a1a0a:
+			return
+		width, height = struct.unpack('>ii', head[16:24])
+		return [width, height]
+
+#Parse current nodes from XML
+def parseXML():
+	file = open("node_data.xml", "r")
+	tree = parse(file)
+	elem = tree.getroot()
+	build = elem.getchildren()[0]
+	bn = build.getchildren()
+	for i in bn:
+		iden = i.findtext("id")
+		if iden[0:3] != "HP3" and iden[0:2] != "C3" and iden[0:2] != "S3":
+			continue
+		newNode = Node()
+		newNode.id = iden
+		newNode.pos = Vector(float(i.findtext("positionx")), float(i.findtext("positiony")))
+		for j in i.findall("connection"):
+			newNode.cons.append(j.text)
+		nodes.append(newNode)
+		
 #Simple 2D vector class
 class Vector:
 	x = 0
@@ -72,7 +104,8 @@ class Node:
 #Attempt to load necessary data, exits program if invalid arguments are passed by the user
 try:
 	img = loadImage(str(sys.argv[1]))
-	imgDim = Vector(int(sys.argv[2]), int(sys.argv[3]))
+	imgDim = Vector(get_image_size(str(sys.argv[1]))[0], get_image_size(str(sys.argv[1]))[1])
+	#imgDim = Vector(int(sys.argv[2]), int(sys.argv[3]))
 except:
 	close()
 	exit("Well fuck")
@@ -85,21 +118,7 @@ tNodes = []
 nodes = []
 activeNode = Node()
 
-file = open("node_data.xml", "r")
-tree = parse(file)
-elem = tree.getroot()
-build = elem.getchildren()[0]
-bn = build.getchildren()
-for i in bn:
-	iden = i.findtext("id")
-	if iden[0:3] != "HP3" and iden[0:2] != "C3" and iden[0:2] != "S3":
-		continue
-	newNode = Node()
-	newNode.id = iden
-	newNode.pos = Vector(float(i.findtext("positionx")), float(i.findtext("positiony")))
-	for j in i.findall("connection"):
-		newNode.cons.append(j.text)
-	nodes.append(newNode)
+parseXML()
 
 while not closed():
 	clear()
